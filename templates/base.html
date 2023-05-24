@@ -1,0 +1,22 @@
+{% import "macros/macros.html" as post_macros %}
+
+<!DOCTYPE html>
+<html lang="{{lang}}">
+{% include "partials/header.html" %}
+
+<script data-goatcounter="https://human-errxor.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+<body>
+    <div class="content">
+        {% include "partials/head.html" %}
+
+        {% block main_content %}
+        foobar
+        {% endblock main_content %}
+
+        {% include "partials/footer.html" %}
+    </div>
+</body>
+
+</html>

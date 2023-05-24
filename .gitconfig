@@ -1,0 +1,6 @@
+[user]
+    name = humanerrxor
+    email = human-errxor@gmail.com
+
+[alias]
+    commit = -c user.name='humanerrxor' -c user.email='humanerrxor@gmail.com` commit
