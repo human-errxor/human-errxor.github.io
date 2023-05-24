@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+
+    
+        <title>
+             Pick a key, any key - Medium
+            
+        </title>
+
+        
+            <meta property="og:title" content="Pick a key, any key - Medium" />
+        
+    
+
+    
+        
+    
+
+    
+        
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+
+    
+        <link href=https://human-errxor.github.io/css/fonts.css rel="stylesheet" />
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://human-errxor.github.io/css/main.css />
+
+    
+        <link
+            rel="stylesheet"
+            id="darkModeStyle"
+            type="text/css"
+            href=https://human-errxor.github.io/css/dark.css
+            
+            
+        />
+    
+
+
+    
+
+
+</head>
+
+
+<script data-goatcounter="https://human-errxor.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+<body>
+    <div class="content">
+        <header>
+    <div class="main" id="main_title">
+        <a href=https:&#x2F;&#x2F;human-errxor.github.io></a>
+    </div>
+
+    <nav>
+        
+            <a href=&#x2F;posts>posts</a> |
+        
+            <a href=&#x2F;about>about</a> |
+        
+        <a href="/">home</a>
+
+        
+    </nav>
+</header>
+
+
+        
+    
+<main>
+    <article>
+        <div class="title">
+            <h1 class="title">Pick a key, any key - Medium</h1>
+            <div class="meta">
+                
+
+                
+            </div>
+        </div>
+
+        
+
+        <section class="body">
+            <p>In this post, we'll crack a moderately well-known application to help with practicing music.</p>
+<p>Since this application, presumable makes more money, we'll find that the complexity of its protection is moderately more complex than the previous examples.</p>
+<h2 id="the-restriction">The Restriction</h2>
+<p>As usual, there is a dialog to purchase a license after a second or two of using the app:</p>
+<p><img src="/hashing_restriction.png" alt="restriction_message" /></p>
+<h2 id="initial-investigation">Initial Investigation</h2>
+<p>This time, ghidra does not pick detect any references to the strings in the dialog.</p>
+<p>Instead, if we can search for strings in the binary like &quot;trial&quot;, &quot;register&quot;, or &quot;license&quot;.</p>
+<p>Searching for &quot;activate&quot; shows us a string &quot;activated&quot; with the following code referencing it (function label inferred):</p>
+<pre data-lang="C" style="background-color:#2b303b;color:#c0c5ce;" class="language-C "><code class="language-C" data-lang="C"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">check_if_product_activated</span><span>(</span><span style="color:#b48ead;">void</span><span>)
+</span><span>{
+</span><span>    ...
+</span><span>    uVar8 = __stubs::</span><span style="color:#bf616a;">_objc_allocWithZone</span><span>(&amp;_OBJC_CLASS_$_PADProduct);
+</span><span>    *(lVar13 + -</span><span style="color:#d08770;">8</span><span>) = </span><span style="color:#d08770;">0x1000e1abe</span><span>;
+</span><span>    uVar5 = (*__got::_objc_retain)(uVar5);
+</span><span>    *(lVar13 + -</span><span style="color:#d08770;">8</span><span>) = </span><span style="color:#d08770;">0x1000e1ada</span><span>;
+</span><span>    uVar9 = __stub_helper::</span><span style="color:#bf616a;">thunk_FUN_1004a5ce0</span><span>(</span><span style="color:#d08770;">0x323533393934</span><span>,</span><span style="color:#d08770;">0xe600000000000000</span><span>);
+</span><span>                    </span><span style="color:#65737e;">/* [undefined initWithProductID:undefined productType:0x0
+</span><span style="color:#65737e;">                       configuration:&lt;&lt;unknown&gt;&gt;] */
+</span><span>    *(lVar13 + -</span><span style="color:#d08770;">8</span><span>) = </span><span style="color:#d08770;">0x1000e1af4</span><span>;
+</span><span>    lVar11 = __stubs::_objc_msgSend
+</span><span>                       (uVar8,&quot;</span><span style="color:#a3be8c;">initWithProductID:productType:configuration:</span><span>&quot;,uVar9,</span><span style="color:#d08770;">0</span><span>,uVar5);
+</span><span>    ...
+</span><span>                    </span><span style="color:#65737e;">/* [undefined activated] */
+</span><span>    *(lVar13 + -</span><span style="color:#d08770;">8</span><span>) = </span><span style="color:#d08770;">0x1000e1b1b</span><span>;
+</span><span>    cVar3 = __stubs::</span><span style="color:#bf616a;">_objc_msgSend</span><span>(lVar11,&quot;</span><span style="color:#a3be8c;">activated</span><span>&quot;);
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(cVar3 == &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;) {
+</span><span>      ...
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">else </span><span>{
+</span><span>      ...
+</span><span>      __stubs::</span><span style="color:#bf616a;">_objc_msgSend</span><span>(uVar8,&quot;</span><span style="color:#a3be8c;">verifyActivationWithCompletion:</span><span>&quot;,pvVar12);
+</span><span>      ...
+</span><span>    }
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">return</span><span>;
+</span><span style="background-color:#bf616a;color:#2b303b;">}</span><span>
+</span></code></pre>
+<p>It looks like this is an Objective-C selector so let's rewrite it as Objective-C:</p>
+<pre data-lang="Objective-C" style="background-color:#2b303b;color:#c0c5ce;" class="language-Objective-C "><code class="language-Objective-C" data-lang="Objective-C"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">check_if_product_activated</span><span>(</span><span style="color:#b48ead;">void</span><span>)
+</span><span>{
+</span><span>    ...
+</span><span>    lVar11 = [[PADProduct </span><span style="color:#8fa1b3;">alloc</span><span>] initWithProductID:uvar9
+</span><span>                                 productType:</span><span style="color:#d08770;">0
+</span><span>                                 configuration:uVar5];
+</span><span>    ...
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(!lVar1.</span><span style="color:#bf616a;">activated</span><span>) {
+</span><span>      ...
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">else </span><span>{
+</span><span>      ...
+</span><span>      [lVar11 </span><span style="color:#8fa1b3;">verifyActivationWithCompletion:</span><span>pvVar12];
+</span><span>      ...
+</span><span>    }
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">return</span><span>;
+</span><span style="background-color:#bf616a;color:#2b303b;">}</span><span>
+</span></code></pre>
+<p>By the name <code>PADProduct</code> and looking at the <code>Paddle.framework</code> included in the application directory, we can safely assume that <a href="https://www.paddle.com">Paddle</a> is being used for payment/subscription management.</p>
+<p>Unfortunately, I couldn't find a copy of the SDK to download, so we'll have the reverse the one included with the application.</p>
+<h2 id="reversing-paddle-framework">Reversing Paddle.framework</h2>
+<p>To start, let's take a look at the <code>activated</code> method:</p>
+<pre data-lang="Objective-C" style="background-color:#2b303b;color:#c0c5ce;" class="language-Objective-C "><code class="language-Objective-C" data-lang="Objective-C"><span style="color:#b48ead;">char</span><span> PADProduct::</span><span style="color:#bf616a;">activated</span><span>(ID </span><span style="color:#bf616a;">self</span><span>,</span><span style="color:#b48ead;">SEL</span><span> cmd)
+</span><span>{
+</span><span>  plVar2 = [</span><span style="color:#bf616a;">self </span><span style="color:#8fa1b3;">licenseController</span><span>];
+</span><span>  cVar1 = (**(*plVar2 + </span><span style="color:#d08770;">0x58</span><span>))(plVar2);
+</span><span>  </span><span style="color:#b48ead;">return</span><span> cVar1;
+</span><span>}
+</span></code></pre>
+<p>Hmm, looks like the <code>licenseController</code> field is unfortunately a C++ object.</p>
+<p>We'll have to make heavy use of the debugger here.</p>
+<p>Stepping into that indirect call we find the following function (again self-labeled):</p>
+<pre data-lang="Objective-C" style="background-color:#2b303b;color:#c0c5ce;" class="language-Objective-C "><code class="language-Objective-C" data-lang="Objective-C"><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">__thiscall
+</span><span>Mbo2vpZRt70hoVLvg82RPKlyFkAbc42qmI9cr1Ijdl3az21uFs::is_activated
+</span><span>          (Mbo2vpZRt70hoVLvg82RPKlyFkAbc42qmI9cr1Ijdl3az21uFs *this)
+</span><span>{
+</span><span>  
+</span><span>  licenseCode = this-&gt;licenseCode;
+</span><span>  licenseCodeHash = this-&gt;licenseCodeHash;
+</span><span>  cVar3 = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>((licenseCode != </span><span style="color:#d08770;">0</span><span>) &amp;&amp; (licenseCodeHash != </span><span style="color:#d08770;">0</span><span>)) {
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">mikWESxEIGeT3Wqgzhvq1euYkBKAVSTwdlSHGNRhAc71yRRwlg</span><span>()::</span><span style="color:#bf616a;">sCA </span><span>== </span><span style="color:#d08770;">0</span><span>) {
+</span><span>      buf = __stubs::</span><span style="color:#bf616a;">_malloc</span><span>(</span><span style="color:#d08770;">0x40</span><span>);
+</span><span>      lVar5 = </span><span style="color:#d08770;">0</span><span>;
+</span><span>
+</span><span>      </span><span style="color:#b48ead;">do </span><span>{
+</span><span>        </span><span style="color:#b48ead;">if </span><span>(lVar5 &lt; </span><span style="color:#d08770;">0x40</span><span>) {
+</span><span>          </span><span style="color:#65737e;">// Double percent added for string formatting.
+</span><span>          *(buf + lVar5) = &quot;</span><span style="color:#a3be8c;">Gd$7*u(w+XxRhJu7s4-99#F</span><span style="color:#d08770;">%%</span><span style="color:#a3be8c;">0[A?Czt4Jr(q2$Vr0@mXP3rQq7FD7+R*-(F/h&gt;_K</span><span>&quot;[lVar5];
+</span><span>        }
+</span><span>        lVar5 += </span><span style="color:#d08770;">1</span><span>;
+</span><span>      } </span><span style="color:#b48ead;">while </span><span>(lVar5 != </span><span style="color:#d08770;">0x40</span><span>);
+</span><span>
+</span><span>      lVar7 = [[</span><span style="color:#ebcb8b;">NSString </span><span style="color:#8fa1b3;">alloc</span><span>] initWithBytes:buf length:</span><span style="color:#d08770;">0x40</span><span> encoding:</span><span style="color:#d08770;">1</span><span>];
+</span><span>      </span><span style="color:#bf616a;">mikWESxEIGeT3Wqgzhvq1euYkBKAVSTwdlSHGNRhAc71yRRwlg</span><span>()::</span><span style="color:#bf616a;">sCA </span><span>= lVar7;
+</span><span>    }
+</span><span>
+</span><span>    uVar6 = [</span><span style="color:#bf616a;">mikWESxEIGeT3Wqgzhvq1euYkBKAVSTwdlSHGNRhAc71yRRwlg</span><span>()::</span><span style="color:#bf616a;">sCA</span><span> dataUsingEncoding:</span><span style="color:#d08770;">4</span><span>];
+</span><span>
+</span><span>    uVar8 = [</span><span style="color:#ebcb8b;">NSKeyedArchiver </span><span style="color:#8fa1b3;">archivedDataWithRootObject:</span><span>[licenseCode </span><span style="color:#8fa1b3;">copy</span><span>]];
+</span><span>    uVar9 = [uVar8 </span><span style="color:#8fa1b3;">mutableCopy</span><span>];
+</span><span>    [uVar9 </span><span style="color:#8fa1b3;">appendData:</span><span>uVar6];
+</span><span>
+</span><span>    uVar8 = uVar9;
+</span><span>    buf = [uVar8 </span><span style="color:#8fa1b3;">bytes</span><span>];
+</span><span>
+</span><span>    __stubs::</span><span style="color:#bf616a;">_CC_MD5</span><span>(buf, [uVar8 </span><span style="color:#8fa1b3;">length</span><span>], hash);
+</span><span>    uVar9 = [</span><span style="color:#ebcb8b;">NSString </span><span style="color:#8fa1b3;">stringWithFormat:</span><span>@&quot;</span><span style="color:#d08770;">%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x</span><span>&quot;,
+</span><span>                      hash[</span><span style="color:#d08770;">0</span><span>],hash[</span><span style="color:#d08770;">1</span><span>],hash[</span><span style="color:#d08770;">2</span><span>],hash[</span><span style="color:#d08770;">3</span><span>],
+</span><span>                      hash[</span><span style="color:#d08770;">4</span><span>],hash[</span><span style="color:#d08770;">5</span><span>],hash[</span><span style="color:#d08770;">6</span><span>],hash[</span><span style="color:#d08770;">7</span><span>],
+</span><span>                      hash[</span><span style="color:#d08770;">8</span><span>],hash[</span><span style="color:#d08770;">9</span><span>],hash[</span><span style="color:#d08770;">10</span><span>],hash[</span><span style="color:#d08770;">11</span><span>],
+</span><span>                      hash[</span><span style="color:#d08770;">12</span><span>],hash[</span><span style="color:#d08770;">13</span><span>],hash[</span><span style="color:#d08770;">14</span><span>],hash[</span><span style="color:#d08770;">15</span><span>]];
+</span><span>
+</span><span>    cVar3 = [licenseCodeHash </span><span style="color:#8fa1b3;">isEqualToString:</span><span>uVar9];
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(cVar3 == &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;) {
+</span><span>      uVar7 = [</span><span style="color:#bf616a;">mikWESxEIGeT3Wqgzhvq1euYkBKAVSTwdlSHGNRhAc71yRRwlg</span><span>()::</span><span style="color:#bf616a;">sCA</span><span> dataUsingEncoding:</span><span style="color:#d08770;">4</span><span>];
+</span><span>      uVar8 = [licenseCode </span><span style="color:#8fa1b3;">dataUsingEncoding:</span><span style="color:#d08770;">4</span><span>];
+</span><span>
+</span><span>      uVar6 = [[</span><span style="color:#ebcb8b;">NSMutableData </span><span style="color:#8fa1b3;">alloc</span><span>] initWithData:uVar8];
+</span><span>      [uVar6 </span><span style="color:#8fa1b3;">appendData:</span><span>uVar8];
+</span><span>
+</span><span>      __stubs::</span><span style="color:#bf616a;">_CC_MD5</span><span>(uVar6.</span><span style="color:#bf616a;">bytes</span><span>, uVar6.</span><span style="color:#bf616a;">length</span><span>, hash);
+</span><span>      uVar6 = [</span><span style="color:#ebcb8b;">NSString </span><span style="color:#8fa1b3;">stringWithFormat:</span><span>@&quot;</span><span style="color:#d08770;">%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x</span><span>&quot;,
+</span><span>                         hash[</span><span style="color:#d08770;">0</span><span>],hash[</span><span style="color:#d08770;">1</span><span>],hash[</span><span style="color:#d08770;">2</span><span>],hash[</span><span style="color:#d08770;">3</span><span>],
+</span><span>                         hash[</span><span style="color:#d08770;">4</span><span>],hash[</span><span style="color:#d08770;">5</span><span>],hash[</span><span style="color:#d08770;">6</span><span>],hash[</span><span style="color:#d08770;">7</span><span>],
+</span><span>                         hash[</span><span style="color:#d08770;">8</span><span>],hash[</span><span style="color:#d08770;">9</span><span>],hash[</span><span style="color:#d08770;">10</span><span>],hash[</span><span style="color:#d08770;">11</span><span>],
+</span><span>                         hash[</span><span style="color:#d08770;">12</span><span>],hash[</span><span style="color:#d08770;">13</span><span>],hash[</span><span style="color:#d08770;">14</span><span>],hash[</span><span style="color:#d08770;">15</span><span>]];
+</span><span>
+</span><span>      cVar3 = [licenseCodeHash </span><span style="color:#8fa1b3;">isEqualToString:</span><span>uVar6];
+</span><span>    }
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(*__got::___stack_chk_guard == lVar1) {
+</span><span>    </span><span style="color:#b48ead;">return</span><span> cVar3;
+</span><span>  }
+</span><span>
+</span><span>  __stubs::</span><span style="color:#bf616a;">___stack_chk_fail</span><span>();
+</span><span>}
+</span></code></pre>
+<p>This function checks if the user's license code matches a saved license code hash when passed through one of two similar hash functions. Both functions take a binary representation of the license code from either<code>+[NSKeyedArchiver archivedDataWithObject:licenseCode]</code> or <code>[licnseCode dataUsingEncoding:4]</code>.</p>
+<p>The second representation tells us that <code>licenseCode</code> is an <code>NSString</code>.</p>
+<p>The first representation uses <a href="https://nshipster.com/nscoding/">NSKeyedArchiver</a>. This, and the <code>NSCoding</code> interface serialize/deserialize <code>NSObject</code>'s to binary plists. The <code>encodeWithCoder:</code> method of an object conforming to <code>NSCoding</code> adds (key, value) pairs to the plist.</p>
+<p>Searching for methods with this name in the binary shows us a promising class <code>PADLicenseFile</code> with such as method:</p>
+<pre data-lang="Objective-C" style="background-color:#2b303b;color:#c0c5ce;" class="language-Objective-C "><code class="language-Objective-C" data-lang="Objective-C"><span style="color:#b48ead;">void</span><span> PADLicenseFile::encodeWithCoder:(ID </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#b48ead;">SEL</span><span> cmd, ID encoder)
+</span><span>{
+</span><span>  [encoder </span><span style="color:#8fa1b3;">encodeObject:</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">trialStartDate </span><span style="color:#8fa1b3;">forKey:</span><span>@&quot;</span><span style="color:#a3be8c;">trialStartDate</span><span>&quot;];
+</span><span>  [encoder </span><span style="color:#8fa1b3;">encodeObject:</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">licenseCode </span><span style="color:#8fa1b3;">forKey:</span><span>@&quot;</span><span style="color:#a3be8c;">licenseCode</span><span>&quot;];
+</span><span>  [encoder </span><span style="color:#8fa1b3;">encodeObject:</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">licenseCodeHash </span><span style="color:#8fa1b3;">forKey:</span><span>@&quot;</span><span style="color:#a3be8c;">licenseCodeHash</span><span>&quot;];
+</span><span>  [encoder </span><span style="color:#8fa1b3;">encodeObject:</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">licenseExpiryDate </span><span style="color:#8fa1b3;">forKey:</span><span>@&quot;</span><span style="color:#a3be8c;">licenseExpiryDate</span><span>&quot;];
+</span><span>  [encoder </span><span style="color:#8fa1b3;">encodeObject:</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">activationEmail </span><span style="color:#8fa1b3;">forKey:</span><span>@&quot;</span><span style="color:#a3be8c;">activationEmail</span><span>&quot;];
+</span><span>  [encoder </span><span style="color:#8fa1b3;">encodeObject:</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">activationID </span><span style="color:#8fa1b3;">forKey:</span><span>@&quot;</span><span style="color:#a3be8c;">activationId</span><span>&quot;];
+</span><span>  [encoder </span><span style="color:#8fa1b3;">encodeObject:</span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#bf616a;">activationDate </span><span style="color:#8fa1b3;">forKey:</span><span>@&quot;</span><span style="color:#a3be8c;">activationDate</span><span>&quot;];
+</span><span>  </span><span style="color:#b48ead;">return</span><span>;
+</span><span>}
+</span></code></pre>
+<p>Coming back to the hashing algorithm, after the <code>licenseCode</code> is converted into binary, a random-looking stirng <code>&quot;Gd$7*u(w...</code> is appended to it. The md5 of the resulting byte array is then taken and compared to <code>licenseCodeHash</code>.</p>
+<p>It doesn't look like any further validation is done on the license code or its hash. Therefore, if we can figure out where to put this information (and which variant of the hashing algorithm is used), we should be able to generate an arbitrary license code and calculate the hash that <code>Paddle</code> expects.</p>
+<h2 id="license-format-on-disk">License format on disk</h2>
+<p>Looking through other methods of the <code>Mbo2vp...</code> object, we find another interesting method:</p>
+<pre data-lang="Objective-C" style="background-color:#2b303b;color:#c0c5ce;" class="language-Objective-C "><code class="language-Objective-C" data-lang="Objective-C"><span>undefined </span><span style="color:#8fa1b3;">__thiscall
+</span><span>Mbo2vpZRt70hoVLvg82RPKlyFkAbc42qmI9cr1Ijdl3az21uFs::load_saved_license_data
+</span><span>          (Mbo2vpZRt70hoVLvg82RPKlyFkAbc42qmI9cr1Ijdl3az21uFs *this)
+</span><span>{
+</span><span>                    </span><span style="color:#65737e;">/* 0x3647c - check_if_spadl_exists */
+</span><span>  cVar4 = (****&amp;this-&gt;field_0x50)();
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(cVar4 == &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;) {
+</span><span>    uVar18 = </span><span style="color:#d08770;">0</span><span>;
+</span><span>  }
+</span><span>  </span><span style="color:#b48ead;">else </span><span>{
+</span><span>    plVar1 = *&amp;this-&gt;field_0x50;
+</span><span>    uVar6 = [*&amp;this-&gt;field_0x8 md5];
+</span><span>
+</span><span>                    </span><span style="color:#65737e;">/* 0x365c0 - parse_spadl */
+</span><span>    lVar8 = (**(*plVar1 + </span><span style="color:#d08770;">8</span><span>))(plVar1,uVar6);
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(lVar8 == </span><span style="color:#d08770;">0</span><span>) {
+</span><span>      uVar18 = </span><span style="color:#d08770;">0</span><span>;
+</span><span>    }
+</span><span>    </span><span style="color:#b48ead;">else </span><span>{
+</span><span>      uVar6 = [lVar8 </span><span style="color:#8fa1b3;">objectForKey:</span><span>@&quot;</span><span style="color:#a3be8c;">license_data</span><span>&quot;];
+</span><span>      this-&gt;trialStartDate = [uVar6 </span><span style="color:#8fa1b3;">trialStartDate</span><span>];
+</span><span>      this-&gt;licenseCode = [uVar6 </span><span style="color:#8fa1b3;">licenseCode</span><span>];
+</span><span>      this-&gt;licenseCodeHash = [uVar6 </span><span style="color:#8fa1b3;">licenseCodeHash</span><span>];
+</span><span>
+</span><span>      uVar10 = [uVar6 </span><span style="color:#8fa1b3;">licenseCode</span><span>];
+</span><span>      uVar13 = [uVar6 </span><span style="color:#8fa1b3;">licenseCodeHash</span><span>];
+</span><span>
+</span><span>      </span><span style="color:#65737e;">/* Same hash calculation from `is_activated */
+</span><span>
+</span><span>      this-&gt;licenseExpiryDate = [uVar6 </span><span style="color:#8fa1b3;">licenseExpiryDate</span><span>];
+</span><span>      this-&gt;activationEmail = [uVar6 </span><span style="color:#8fa1b3;">activationEmail</span><span>];
+</span><span>      this-&gt;activationID = [uVar6 </span><span style="color:#8fa1b3;">activationId</span><span>];
+</span><span>      this-&gt;activationDate = [uVar6 </span><span style="color:#8fa1b3;">activationDate</span><span>];
+</span><span>      uVar18 = </span><span style="color:#d08770;">1</span><span>;
+</span><span>    }
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(*__got::___stack_chk_guard == local_38) {
+</span><span>    </span><span style="color:#b48ead;">return</span><span> uVar18;
+</span><span>  }
+</span><span>
+</span><span>  __stubs::</span><span style="color:#bf616a;">___stack_chk_fail</span><span>();
+</span><span>}
+</span></code></pre>
+<p>Of course I already spoiled it, but this method makes two virtual calls.</p>
+<p>The first checks if there is a &quot;&lt;Product ID&gt;.spadl&quot; file in the &quot;Application Support&quot; directory.</p>
+<p>Assuming this file exists, the second method reads the file into an <code>NSData</code> object and parses it in the following method:</p>
+<pre data-lang="Objective-C" style="background-color:#2b303b;color:#c0c5ce;" class="language-Objective-C "><code class="language-Objective-C" data-lang="Objective-C"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">__thiscall
+</span><span>P8r32a46ZpeaYZjCaHlB9hqndX7jzb7jKr8sBLVpKzzaSIIAVu::load_and_decrypt_license_data
+</span><span>          (P8r32a46ZpeaYZjCaHlB9hqndX7jzb7jKr8sBLVpKzzaSIIAVu *this,</span><span style="color:#ebcb8b;">NSData </span><span>*param_1,
+</span><span>          </span><span style="color:#ebcb8b;">NSString </span><span>*param_2)
+</span><span>{
+</span><span>  uVar5 = [</span><span style="color:#ebcb8b;">NSKeyedUnarchiver </span><span style="color:#8fa1b3;">unarchiveObjectWithData:</span><span>param_1];
+</span><span>  keys[</span><span style="color:#d08770;">0</span><span>] = @&quot;</span><span style="color:#a3be8c;">license_data</span><span>&quot;;
+</span><span>
+</span><span>  uVar6 = [uVar5 </span><span style="color:#8fa1b3;">objectForKey:</span><span>keys[</span><span style="color:#d08770;">0</span><span>]];
+</span><span>  uVar7 = [uVar6 </span><span style="color:#8fa1b3;">PADAES256DecryptWithKey:</span><span>param_2];
+</span><span>  pvVar9 = [</span><span style="color:#ebcb8b;">NSKeyedUnarchiver </span><span style="color:#8fa1b3;">unarchiveObjectWithData:</span><span>uVar7];
+</span><span>  objects[</span><span style="color:#d08770;">0</span><span>] = pvVar9;
+</span><span>
+</span><span>  keys[</span><span style="color:#d08770;">1</span><span>] = @&quot;</span><span style="color:#a3be8c;">file_version</span><span>&quot;;
+</span><span>  objects[</span><span style="color:#d08770;">1</span><span>] = [uVar6 </span><span style="color:#8fa1b3;">objectForKey:</span><span>keys[</span><span style="color:#d08770;">1</span><span>]];
+</span><span>
+</span><span>  keys[</span><span style="color:#d08770;">2</span><span>] = @&quot;</span><span style="color:#a3be8c;">sdk_version</span><span>&quot;;
+</span><span>  objects[</span><span style="color:#d08770;">2</span><span>] = [uVar6 </span><span style="color:#8fa1b3;">objectForKey:</span><span>keys[</span><span style="color:#d08770;">2</span><span>]];
+</span><span>
+</span><span>  keys[</span><span style="color:#d08770;">3</span><span>] = @&quot;</span><span style="color:#a3be8c;">file_platform</span><span>&quot;;
+</span><span>  objects[</span><span style="color:#d08770;">3</span><span>] = [uVar6 </span><span style="color:#8fa1b3;">objectForKey:</span><span>keys[</span><span style="color:#d08770;">2</span><span>]];
+</span><span>
+</span><span>  uVar8 = [</span><span style="color:#ebcb8b;">NSDictionary </span><span style="color:#8fa1b3;">dictionaryWithObjects:</span><span>objects
+</span><span>                        </span><span style="color:#8fa1b3;">forKeys:</span><span>keys
+</span><span>                        </span><span style="color:#8fa1b3;">count:</span><span style="color:#d08770;">4</span><span>];
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(*__got::___stack_chk_guard == lVar1) {
+</span><span>    </span><span style="color:#b48ead;">return</span><span> uVar8;
+</span><span>  }
+</span><span>
+</span><span>  __stubs::</span><span style="color:#bf616a;">___stack_chk_fail</span><span>();
+</span><span>}
+</span></code></pre>
+<p>So it looks like the spadl file is actually a keyed archive (binary plist) which contains another AES-encrypted keyed archive which contains the license data:</p>
+<p>This key is static so we can just dump it in the debugger and use it to generate our own encrypted keyed archive.</p>
+<p>So if we created a keyed archive like so and put it in the correct spadl file, we can successfully unlock the application:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>NSDictionary:
+</span><span>    file_version: 1
+</span><span>    sdk_version: 1.0
+</span><span>    file_platform: &quot;mac&quot;
+</span><span>    license_data: AES-CBC-256(
+</span><span>        PADLicesneFile:
+</span><span>            trialStartDate: unix epoch time,
+</span><span>            activationStartDate: unix epoch time,
+</span><span>            licenseExpiryDate: 100 years in the future,
+</span><span>            activationEmail: &quot;fakeemail@gmail.com&quot;,
+</span><span>            activationID: &quot;fakeuser&quot;,
+</span><span>            licenseCode: &quot;A&quot;,
+</span><span>            licenseCodeHash: MD5(&quot;A&quot; + &quot;Gd$7...&quot;))
+</span></code></pre>
+<p>If we run the application from the command line, we see the following error printed:</p>
+<p><code>Paddle - verifyActivation - state: 0 error: Optional(Error Domain=com.paddle.paddle Code=-108 &quot;Specifies that we were unable to verify the license activation of a product.&quot; UserInfo={NSLocalizedDescription=Specifies that we were unable to verify the license activation of a product.})</code></p>
+<p>Even though the application &quot;isn't able to verify our license&quot;, the app works fine and we can along our merry way.</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+
+        
+
+    </div>
+</body>
+
+</html>

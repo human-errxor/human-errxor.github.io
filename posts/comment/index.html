@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+
+    
+        <title>
+             Commenting can be tricky - Easy
+            
+        </title>
+
+        
+            <meta property="og:title" content="Commenting can be tricky - Easy" />
+        
+    
+
+    
+        
+    
+
+    
+        
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+
+    
+        <link href=https://human-errxor.github.io/css/fonts.css rel="stylesheet" />
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://human-errxor.github.io/css/main.css />
+
+    
+        <link
+            rel="stylesheet"
+            id="darkModeStyle"
+            type="text/css"
+            href=https://human-errxor.github.io/css/dark.css
+            
+            
+        />
+    
+
+
+    
+
+
+</head>
+
+
+<script data-goatcounter="https://human-errxor.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+<body>
+    <div class="content">
+        <header>
+    <div class="main" id="main_title">
+        <a href=https:&#x2F;&#x2F;human-errxor.github.io></a>
+    </div>
+
+    <nav>
+        
+            <a href=&#x2F;posts>posts</a> |
+        
+            <a href=&#x2F;about>about</a> |
+        
+        <a href="/">home</a>
+
+        
+    </nav>
+</header>
+
+
+        
+    
+<main>
+    <article>
+        <div class="title">
+            <h1 class="title">Commenting can be tricky - Easy</h1>
+            <div class="meta">
+                
+
+                
+            </div>
+        </div>
+
+        
+
+        <section class="body">
+            <p>Here we look at a screen drawing program.</p>
+<h2 id="the-restriction">The Restriction</h2>
+<p>When we open up the app for the first time, we are greeted with the following window asking for our license:</p>
+<p><img src="/drawing_restriction.png" alt="restriction_message" /></p>
+<h2 id="initial-investigation">Initial Investigation</h2>
+<p>Again, searching for references to the strings in this window brings us to the method <code>NMLicenseController::checkLicense</code> (converted to Objective-C from ghidra):</p>
+<pre data-lang="Objective-C" style="background-color:#2b303b;color:#c0c5ce;" class="language-Objective-C "><code class="language-Objective-C" data-lang="Objective-C"><span style="color:#b48ead;">char</span><span> NMLicenseController::</span><span style="color:#bf616a;">checkLicense</span><span>(ID </span><span style="color:#bf616a;">self</span><span>,</span><span style="color:#b48ead;">SEL</span><span> param_2)
+</span><span>
+</span><span>{
+</span><span>  ...
+</span><span>      </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        [</span><span style="color:#bf616a;">self </span><span style="color:#8fa1b3;">setTitleWithMnemonic:</span><span>@&quot;</span><span style="color:#a3be8c;">Please purchase and input a license key...</span><span>&quot;];
+</span><span>        [</span><span style="color:#bf616a;">self </span><span style="color:#8fa1b3;">setEnableLicenseKeyInput:</span><span style="color:#d08770;">1</span><span>];
+</span><span>        [</span><span style="color:#bf616a;">self </span><span style="color:#8fa1b3;">setCanContinue:</span><span style="color:#d08770;">0</span><span>];
+</span><span>
+</span><span>        uVar4 = [</span><span style="color:#bf616a;">self </span><span style="color:#8fa1b3;">nextButton</span><span>];
+</span><span>        [uVar4 </span><span style="color:#8fa1b3;">setTitle:</span><span>@&quot;</span><span style="color:#a3be8c;">Register</span><span>&quot;];
+</span><span>      }
+</span><span>  ...
+</span><span>}
+</span></code></pre>
+<h2 id="how-to-return-1">How to Return 1</h2>
+<p>It's reasonable to assume that a method named <code>checkLicense</code> that returns a <code>char</code> will return 1 (true) if the user has a valid license or 0 (false) otherwise.</p>
+<p>Reviewing the beginning of this method seems to confirm this:</p>
+<pre data-lang="Objective-C" style="background-color:#2b303b;color:#c0c5ce;" class="language-Objective-C "><code class="language-Objective-C" data-lang="Objective-C"><span style="color:#b48ead;">char</span><span> NMLicenseController::</span><span style="color:#bf616a;">checkLicense</span><span>(ID </span><span style="color:#bf616a;">self</span><span>,</span><span style="color:#b48ead;">SEL</span><span> param_2)
+</span><span>{
+</span><span>  </span><span style="color:#96b5b4;">NSLog</span><span>(@&quot;</span><span style="color:#a3be8c;">Check License</span><span>&quot;);
+</span><span>
+</span><span>  puVar9 = __got::_objc_msgSend;
+</span><span>  uVar4 = [</span><span style="color:#ebcb8b;">NSBundle </span><span style="color:#8fa1b3;">mainBundle</span><span>];
+</span><span>  uVar5 = [uVar4 </span><span style="color:#8fa1b3;">pathForResource:</span><span>@&quot;</span><span style="color:#a3be8c;">user</span><span>&quot; </span><span style="color:#8fa1b3;">ofType:</span><span>@&quot;</span><span style="color:#a3be8c;">dat</span><span>&quot;];
+</span><span>
+</span><span>  uVar4 = [</span><span style="color:#ebcb8b;">NSFileManager </span><span style="color:#8fa1b3;">defaultManager</span><span>];
+</span><span>  cVar1 = [uVar4 </span><span style="color:#8fa1b3;">fileExistsAtPath:</span><span>uVar5];
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(cVar1 != &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;) {
+</span><span>    uVar4 = [</span><span style="color:#ebcb8b;">NSString </span><span style="color:#8fa1b3;">stringWithContentsOfFile:</span><span>uVar5 </span><span style="color:#8fa1b3;">encoding:</span><span style="color:#d08770;">0x1 </span><span style="color:#8fa1b3;">error:</span><span style="color:#d08770;">0x0</span><span>];
+</span><span>    lVar6 = [uVar4 </span><span style="color:#8fa1b3;">rangeOfString:</span><span>@&quot;</span><span style="color:#a3be8c;">//</span><span>&quot;];
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(lVar6 != </span><span style="color:#d08770;">0</span><span>) {
+</span><span>      </span><span style="color:#96b5b4;">NSLog</span><span>(@&quot;</span><span style="color:#a3be8c;">Licensed to </span><span style="color:#d08770;">%@</span><span style="color:#a3be8c;">!</span><span>&quot;, uVar4);
+</span><span>
+</span><span>      [</span><span style="color:#bf616a;">self </span><span style="color:#8fa1b3;">setIsTrial:</span><span style="color:#d08770;">0</span><span>];
+</span><span>      [</span><span style="color:#bf616a;">self </span><span style="color:#8fa1b3;">setUserName:</span><span>uVar4];
+</span><span>
+</span><span>      cVar1 = &#39;</span><span style="color:#96b5b4;">\x01</span><span>&#39;;
+</span><span>      </span><span style="color:#b48ead;">goto</span><span> exit;
+</span><span>    }
+</span><span>  }
+</span><span>  ...
+</span><span>}
+</span></code></pre>
+<p>The method first checks if the file <code>&lt;app path/Contents/Resources/user.dat</code> exists.</p>
+<p>Then, if the contents of that file does not start with &quot;//&quot; then we are licensed and ready to go!</p>
+<h2 id="unlocking">Unlocking</h2>
+<p>All we need to do now is create the &quot;user.dat&quot; file and the software thinks we have a valid license!</p>
+<p>We just need to make sure that the username is not commented out!</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+
+        
+
+    </div>
+</body>
+
+</html>

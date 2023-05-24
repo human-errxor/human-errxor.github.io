@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+
+    
+        <title>
+             Static passwords aren&#x27;t very good - Easy
+            
+        </title>
+
+        
+            <meta property="og:title" content="Static passwords aren&#x27;t very good - Easy" />
+        
+    
+
+    
+        
+    
+
+    
+        
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+
+    
+        <link href=https://human-errxor.github.io/css/fonts.css rel="stylesheet" />
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://human-errxor.github.io/css/main.css />
+
+    
+        <link
+            rel="stylesheet"
+            id="darkModeStyle"
+            type="text/css"
+            href=https://human-errxor.github.io/css/dark.css
+            
+            
+        />
+    
+
+
+    
+
+
+</head>
+
+
+<script data-goatcounter="https://human-errxor.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+<body>
+    <div class="content">
+        <header>
+    <div class="main" id="main_title">
+        <a href=https:&#x2F;&#x2F;human-errxor.github.io></a>
+    </div>
+
+    <nav>
+        
+            <a href=&#x2F;posts>posts</a> |
+        
+            <a href=&#x2F;about>about</a> |
+        
+        <a href="/">home</a>
+
+        
+    </nav>
+</header>
+
+
+        
+    
+<main>
+    <article>
+        <div class="title">
+            <h1 class="title">Static passwords aren&#x27;t very good - Easy</h1>
+            <div class="meta">
+                
+
+                
+            </div>
+        </div>
+
+        
+
+        <section class="body">
+            <p>This post features an application that's helpful when studying a performance of a piece of music.</p>
+<h2 id="the-restriction">The Restriction</h2>
+<p>I downloaded the trial version of the application and was greeted with this message upon startup:</p>
+<p><img src="/track_restriction.png" alt="restriction_message" /></p>
+<h2 id="initial-investigation">Initial Investigation</h2>
+<p>The first thing I normally do in this situation is look for the code in the binary that uses that string.</p>
+<p>We find in Ghidra that this code in the <code>doIdle</code> function references the string:</p>
+<pre data-lang="C++" style="background-color:#2b303b;color:#c0c5ce;" class="language-C++ "><code class="language-C++" data-lang="C++"><span>iVar2 = CMyOneSecEventLoopTimer::</span><span style="color:#bf616a;">SecondsSinceStart</span><span>(_g_pCMyOneSecEventLoopTimer);
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>((_g_bRegVersion == &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;) &amp;&amp; 
+</span><span>    (</span><span style="color:#d08770;">2 </span><span>&lt; iVar2) &amp;&amp; 
+</span><span>    (</span><span style="color:#bf616a;">doIdle</span><span>()::s_bMessageDisplayed == &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;))
+</span><span>{
+</span><span>  </span><span style="color:#bf616a;">doIdle</span><span>()::s_bMessageDisplayed = &#39;</span><span style="color:#96b5b4;">\x01</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">ShowDialog</span><span>(
+</span><span>    &quot;</span><span style="color:#a3be8c;">This unregistered version will only play track 1 and 2 of a CD and 
+</span><span style="color:#a3be8c;">     the first quarter  (max 3 minutes) of an audio file.</span><span>&quot;
+</span><span>  );
+</span><span>}
+</span></code></pre>
+<p>So the trial message is displayed when <code>_g_bRegVersion</code> is 0.</p>
+<p>Looking at the cross references to that symbol, we see that the only place that variable is written to is in a function named <code>IsPasswordOk</code>:</p>
+<pre data-lang="C++" style="background-color:#2b303b;color:#c0c5ce;" class="language-C++ "><code class="language-C++" data-lang="C++"><span>undefined8 </span><span style="color:#8fa1b3;">IsPasswordOK</span><span>(</span><span style="color:#b48ead;">void</span><span>)
+</span><span>{
+</span><span>  __darwin_ct_rune_t _Var1;
+</span><span>  </span><span style="color:#b48ead;">int</span><span> iVar2;
+</span><span>  size_t </span><span style="color:#bf616a;">sVar3</span><span>;
+</span><span>  ulong uVar4;
+</span><span>  </span><span style="color:#b48ead;">char</span><span> local_48 [</span><span style="color:#d08770;">32</span><span>];
+</span><span>  </span><span style="color:#b48ead;">long</span><span> local_28;
+</span><span>  
+</span><span>  local_28 = *__got::___stack_chk_guard;
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>();
+</span><span>  __stubs::</span><span style="color:#bf616a;">_strcpy</span><span>(local_48,</span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword);
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">_PDescramblePasswordString</span><span>(local_48);
+</span><span>  </span><span style="color:#bf616a;">sVar3 </span><span>= __stubs::</span><span style="color:#bf616a;">_strlen</span><span>(local_48);
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#d08770;">0 </span><span>&lt; </span><span style="color:#bf616a;">sVar3</span><span>) 
+</span><span>  {
+</span><span>    uVar4 = </span><span style="color:#d08770;">0</span><span>;
+</span><span>    </span><span style="color:#b48ead;">do </span><span>{
+</span><span>      _Var1 = __stubs::</span><span style="color:#bf616a;">___tolower</span><span>(local_48[uVar4]);
+</span><span>      local_48[uVar4] = _Var1;
+</span><span>      uVar4 += </span><span style="color:#d08770;">1</span><span>;
+</span><span>    } </span><span style="color:#b48ead;">while </span><span>((</span><span style="color:#bf616a;">sVar3 </span><span>&amp; </span><span style="color:#d08770;">0xffffffff</span><span>) != uVar4);
+</span><span>  }
+</span><span>
+</span><span>  </span><span style="color:#bf616a;">sVar3 </span><span>= __stubs::</span><span style="color:#bf616a;">_strlen</span><span>(&amp;_g_szPasswordText);
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#d08770;">0 </span><span>&lt; </span><span style="color:#bf616a;">sVar3</span><span>) 
+</span><span>  {
+</span><span>    uVar4 = </span><span style="color:#d08770;">0</span><span>;
+</span><span>    </span><span style="color:#b48ead;">do </span><span>{
+</span><span>      _Var1 = __stubs::</span><span style="color:#bf616a;">___tolower</span><span>((&amp;_g_szPasswordText)[uVar4]);
+</span><span>      (&amp;_g_szPasswordText)[uVar4] = _Var1;
+</span><span>      uVar4 += </span><span style="color:#d08770;">1</span><span>;
+</span><span>    } </span><span style="color:#b48ead;">while </span><span>((</span><span style="color:#bf616a;">sVar3 </span><span>&amp; </span><span style="color:#d08770;">0xffffffff</span><span>) != uVar4);
+</span><span>  }
+</span><span>
+</span><span>  iVar2 = __stubs::</span><span style="color:#bf616a;">_strcmp</span><span>(local_48,&amp;_g_szPasswordText);
+</span><span>
+</span><span>  </span><span style="color:#65737e;">/* VERSION SET HERE */
+</span><span>  _g_bRegVersion = iVar2 == </span><span style="color:#d08770;">0</span><span>;
+</span><span>
+</span><span>  </span><span style="color:#b48ead;">if </span><span>(*__got::___stack_chk_guard == local_28) {
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">CONCAT71</span><span>(</span><span style="color:#d08770;">0x1000ffe</span><span>,_g_bRegVersion);
+</span><span>  }
+</span><span>                    </span><span style="color:#65737e;">/* WARNING: Subroutine does not return */
+</span><span>  __stubs::</span><span style="color:#bf616a;">___stack_chk_fail</span><span>();
+</span><span>}
+</span></code></pre>
+<p>This function compares <code>pGetEncryptedPassword()::szPassword</code> to <code>_g_szPasswordText</code> and sets <code>_g_bRegVersion</code> to true if they are equal.</p>
+<p>Taking a look at the <code>pGetEncryptedPassword</code> function, we see that this is simply a static string:</p>
+<pre data-lang="C++" style="background-color:#2b303b;color:#c0c5ce;" class="language-C++ "><code class="language-C++" data-lang="C++"><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">pGetEncryptedPassword</span><span>(</span><span style="color:#b48ead;">void</span><span>)
+</span><span>{
+</span><span>  size_t </span><span style="color:#bf616a;">sVar1</span><span>;
+</span><span>  
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_5_2_ </span><span>= </span><span style="color:#d08770;">0x6975</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">7</span><span>] = &#39;</span><span style="color:#a3be8c;">j</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">8</span><span>] = &#39;</span><span style="color:#a3be8c;">t</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_9_2_ </span><span>= </span><span style="color:#d08770;">0x7e</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">4</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_0_4_ </span><span>= </span><span style="color:#d08770;">0x2e78706c</span><span>;
+</span><span>  </span><span style="color:#bf616a;">sVar1 </span><span>= __stubs::</span><span style="color:#bf616a;">_strlen</span><span>(</span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword);
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#bf616a;">sVar1 </span><span>+ </span><span style="color:#d08770;">4</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  *(</span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword + </span><span style="color:#bf616a;">sVar1</span><span>) = </span><span style="color:#d08770;">0x2e7e7863</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">8</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">4</span><span>] = &#39;</span><span style="color:#a3be8c;">3</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_5_2_ </span><span>= </span><span style="color:#d08770;">0x3535</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">7</span><span>] = &#39;</span><span style="color:#a3be8c;">.</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">sVar1 </span><span>= __stubs::</span><span style="color:#bf616a;">_strlen</span><span>(</span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword);
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#bf616a;">sVar1 </span><span>+ </span><span style="color:#d08770;">4</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  *(</span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword + </span><span style="color:#bf616a;">sVar1</span><span>) = </span><span style="color:#d08770;">0x2d396b4c</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">13</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_5_2_ </span><span>= </span><span style="color:#d08770;">0x627e</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">7</span><span>] = &#39;</span><span style="color:#a3be8c;">c</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">8</span><span>] = &#39;</span><span style="color:#a3be8c;">m</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_9_2_ </span><span>= </span><span style="color:#d08770;">0x7e66</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">11</span><span>] = &#39;</span><span style="color:#a3be8c;">u</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">12</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">4</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_0_4_ </span><span>= </span><span style="color:#d08770;">0x532b383b</span><span>;
+</span><span>  </span><span style="color:#bf616a;">sVar1 </span><span>= __stubs::</span><span style="color:#bf616a;">_strlen</span><span>(</span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword);
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#bf616a;">sVar1 </span><span>+ </span><span style="color:#d08770;">4</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  *(</span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword + </span><span style="color:#bf616a;">sVar1</span><span>) = </span><span style="color:#d08770;">0x2c2d7e63</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_9_2_ </span><span>= </span><span style="color:#d08770;">0x65</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">8</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">4</span><span>] = &#39;</span><span style="color:#a3be8c;">g</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_5_2_ </span><span>= </span><span style="color:#d08770;">0x3c77</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">7</span><span>] = &#39;</span><span style="color:#a3be8c;">,</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">sVar1 </span><span>= __stubs::</span><span style="color:#bf616a;">_strlen</span><span>(</span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword);
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#bf616a;">sVar1 </span><span>+ </span><span style="color:#d08770;">4</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  *(</span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword + </span><span style="color:#bf616a;">sVar1</span><span>) = </span><span style="color:#d08770;">0x336f3635</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">8</span><span>] = &#39;</span><span style="color:#a3be8c;">_</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword.</span><span style="color:#bf616a;">_9_2_ </span><span>= </span><span style="color:#d08770;">0x327a</span><span>;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">11</span><span>] = &#39;</span><span style="color:#a3be8c;">2</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">12</span><span>] = &#39;</span><span style="color:#a3be8c;">p</span><span>&#39;;
+</span><span>  </span><span style="color:#bf616a;">pGetEncryptedPassword</span><span>()::szPassword[</span><span style="color:#d08770;">13</span><span>] = &#39;</span><span style="color:#96b5b4;">\0</span><span>&#39;;
+</span><span>  </span><span style="color:#b48ead;">return</span><span>;
+</span><span>}
+</span></code></pre>
+<p>The descramble function is a simple caesar-like rotation but regardless of what the details are, we can set a breakpoint once the function has run and reveal the unscrambled password.</p>
+<p>Entering this password into the unlock dialog, we can see that the application has been successfully unlocked:</p>
+<p><img src="/static_unlock.png" alt="static_success" /></p>
+<p>Easy peasy.</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+
+        
+
+    </div>
+</body>
+
+</html>
